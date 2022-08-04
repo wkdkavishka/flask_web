@@ -5,5 +5,21 @@
 {% endblock %}
 
 {% block content %}
-    <h3></h3>
+
+    <h3 align="center">Home</h3>
+
+    <ul class="list-group list-group-flush" id="notes">
+        {% for note in user.notes %}
+            <li class="list-group-item">{{ note.data }}</li>
+        {% endfor %}
+    </ul>
+    <form method="POST">
+        <textarea name='note' id='note' class="form-control"></textarea>
+        <br/>
+        <div align="center">
+            <button type="submit" class="btn btn-primary">Add Note</button>
+        </div>
+
+    </form>    
+
 {% endblock %}
