@@ -1,16 +1,19 @@
+import json
 import time
 
-from flask import Blueprint, redirect, render_template, request, flash, url_for
+from flask import Blueprint, redirect, render_template, request, flash, url_for, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 
-
 from .models import user, note
-from .__init__ import db
+from .models import db_detail
 
-auth = Blueprint('auth',__name__)
+db = db_detail['db']
+DB_NAME = db_detail['DB_NAME']
 
-@auth.route('/login', methods=['GET','POST'])
+paths = Blueprint('paths', __name__)
+
+@paths.route('/login', methods=['GET','POST'])
 def login():
     if ( request.method == 'POST' ):
         email = request.form.get('email')
@@ -27,7 +30,7 @@ def login():
                     login_user(user_now, remember=False)
                     flash('Logging Success', category='success')
                     #time.sleep(0.2)    # Pause 5.5 seconds
-                    return redirect(url_for('views.home'))
+                    return redirect(url_for('paths.home'))
                 else:
                     flash('Logging Failed', category='error')
             else:
@@ -40,13 +43,13 @@ def login():
 
     return render_template("login.html", user=current_user)
 
-@auth.route('/logout')
+@paths.route('/logout')
 @login_required # make sure its loged in
 def logout():
     logout_user()
-    return redirect(url_for('auth.login')) # 
+    return redirect(url_for('paths.login')) # 
 
-@auth.route('/sign-up', methods=['GET','POST'])
+@paths.route('/sign-up', methods=['GET','POST'])
 def sign_up():
     if ( request.method == 'POST' ):
         email = request.form.get('email')
@@ -76,7 +79,7 @@ def sign_up():
             db.session.add(new_user)
             db.session.commit()
             flash('All seems fine', category='success')
-            return redirect(url_for('views.home'))
+            return redirect(url_for('paths.home'))
 
     elif ( request.method == 'GET' ): # for security reasons
         pass
@@ -84,3 +87,30 @@ def sign_up():
         pass
 
     return render_template("sign_up.html", user=current_user)
+
+@paths.route('/', methods=['GET', 'POST'])
+@login_required
+def home():
+    if (request.method == 'POST'):
+        new_note = request.form.get('note')
+        if ( not new_note ):
+            flash('Note seems to be empty', category='error')
+        else:
+            new_note = note(data=new_note, user_id=current_user.id)
+            db.session.add(new_note)
+            db.session.commit()
+            flash('Note Added', category='success')
+
+    return render_template("home.html", user=current_user)
+
+@paths.route('/delete-note', methods=['POST'])
+def delete_note():
+    note = json.loads(request.data)
+    note_id = note['note']
+    note = note.query.get(note_id)
+    if ( note ):
+        if ( note.user_id == current_user.id ):
+            db.session.delete(note)
+            db.session.commit()
+
+    return jsonify({})

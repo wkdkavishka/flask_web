@@ -16,9 +16,9 @@ class user(db.Model, UserMixin):
     password = db.Column(db.String(50), nullable=False)
     first_name = db.Column(db.String(40), nullable=False)
     second_name = db.Column(db.String(40), nullable=False)
-    notes = db.relationship('notes')
+    note = db.relationship('note')
 
-class notes(db.Model):
+class note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.String(1000), nullable=True)
     date = db.Column(db.DateTime(timezone=True), default=func.now())
