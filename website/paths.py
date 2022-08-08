@@ -105,12 +105,25 @@ def home():
 
 @paths.route('/delete-note', methods=['POST'])
 def delete_note():
-    note = json.loads(request.data)
-    note_id = note['note']
-    note = note.query.get(note_id)
-    if ( note ):
-        if ( note.user_id == current_user.id ):
-            db.session.delete(note)
+    note_received = json.loads(request.data)
+    note_id = note_received['note_id']
+    note_to_delete = note.query.get(note_id)
+    if ( note_to_delete ):
+        if ( note_to_delete.user_id == current_user.id ):
+            db.session.delete(note_to_delete)
             db.session.commit()
-
+            flash('Note Deleted', category='success')
+    else:
+        flash('Note seems to not exist', category='error')
+    
     return jsonify({})
+    #return render_template("home.html", user=current_user)
+
+#----------------------------------------------------------------------
+@paths.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
+
+@paths.errorhandler(500)
+def page_not_found(error):
+    return render_template('500.html'), 500
